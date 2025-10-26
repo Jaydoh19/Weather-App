@@ -4,10 +4,20 @@ const apiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q="
 const searchBox = document.querySelector('.search input');
 const searchBtn = document.querySelector('.search button');
 const weatherIcon = document.querySelector('.weather-icon');
+
 const tempButton = document.querySelector('.tmpBtn');
 const tempElement = document.querySelector(".temp");
+const tempKmElement = document.querySelector(".wind");
+const mphButton = document.querySelector(".mphBtn");
 
 let isCelsius = true;
+let isKmh = true;
+
+
+tempButton.style.display = "none";
+mphButton.style.display = "none";
+
+let originalTempC = null;
 
 async function checkWeather(city){
     const response = await fetch(apiUrl + city +`&appid=${apiKey}`);
@@ -20,13 +30,15 @@ async function checkWeather(city){
       document.querySelector('.error').style.display = "block";
     } else {
       var data = await response.json();
-
+      originalTempC = data.main.temp;
+      originalWindKmh = data.wind.speed;
     
 
       document.querySelector('.city').innerHTML = data.name;
-      document.querySelector('.temp').innerHTML = Math.round(data.main.temp) + "°C";
+      tempElement.textContent = `${originalTempC.toFixed(0)} °C`;
       document.querySelector('.humidity').innerHTML = data.main.humidity + "%";
-      document.querySelector('.wind').innerHTML = data.wind.speed + " km/h";
+      originalWindSpeed = data.wind.speed;
+      document.querySelector('.wind').innerHTML = originalWindSpeed.toFixed(1) + " km/h";
 
       if(data.weather[0].main == "Clouds"){
         weatherIcon.src = "images/clouds.png";
@@ -42,14 +54,23 @@ async function checkWeather(city){
 
       document.querySelector('.weather').style.display = "block";
       document.querySelector('.error').style.display = "none";
+      document.querySelector('.tmpBtn').style.display = "block";
+      document.querySelector('.mphBtn').style.display = "block";
     }
-    
+
+    isCelsius = true;
+    isKmh = true;
+    tempButton.textContent = "°F";
+    mphButton.textContent = "mph";
 }
 
 searchBtn.addEventListener('click', () => {
     checkWeather(searchBox.value);
 });
 
+searchBox.addEventListener('keydown', (e) => {
+  if(e.key == 'Enter') checkWeather(searchBox.value);
+});
 
 // =======================
 // Temperature Conversion
@@ -68,25 +89,53 @@ tempButton.addEventListener('click', () => {
   changeMetric();
 })
 
-function changeMetric(){
- 
-    let tempText = tempElement.textContent;
-    let currentTemp = parseFloat(tempText);
+function changeMetric() {
+  // nothing to do until we have data
+  if (originalTempC === null) return;
 
-    if (isCelsius) {
-      const fahrenheit = celsiusToFahrenheit(currentTemp);
-      tempElement.textContent = `${Math.round(fahrenheit)} °F`
-      tempButton.textContent = "°C";
-    } else {
-      const celsius = fahrenheitToCelsius(currentTemp);
-      tempElement.textContent = `${Math.round(celsius)} °C`
-      tempButton.textContent = "°F";
-    }
+  if (isCelsius) {
+    // convert original °C -> °F
+    const f = celsiusToFahrenheit(originalTempC);
+    tempElement.textContent = `${f.toFixed(0)} °F`;
+    tempButton.textContent = "°C";
+  } else {
+    // show original °C
+    tempElement.textContent = `${originalTempC.toFixed(0)} °C`;
+    tempButton.textContent = "°F";
+  }
 
-    isCelsius = !isCelsius;
+  isCelsius = !isCelsius;
 }
 
 function updateWeather(data) {
   const celsiusTemp = data.main.temp;
   updateTemperature(celsiusTemp); // update the toggle's base temp
 }
+
+// =======================
+// MPH Conversion
+// =======================
+
+mphButton.addEventListener('click', () => {
+  if (originalWindKmh === null) return;
+
+  if (isKmh) {
+    const mph = kmhToMph(originalWindKmh);
+    tempKmElement.textContent = `${mph.toFixed(1)} mph`;
+    mphButton.textContent = "km/h";
+  } else {
+    tempKmElement.textContent = `${originalWindKmh.toFixed(1)} km/h`;
+    mphButton.textContent = "mph";
+  }
+
+  isKmh = !isKmh;
+});
+
+function kmhToMph(kmh) {
+  return kmh * 0.621371;
+}
+
+function mphToKmh(mph) {
+  return mph * 1.60934;
+}
+
