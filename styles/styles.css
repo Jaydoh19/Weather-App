@@ -166,3 +166,18 @@ body{
 
   
 }
+
+
+@media(max-width: 415px){
+
+  .card {
+    padding: 40px 15px;
+  }
+
+  .search input{
+    width: 250px;
+  }
+
+
+  
+}
