@@ -152,3 +152,17 @@ body{
   margin-top: 10px;
   display: none;
 }
+
+@media(max-width: 375px){
+
+  .card {
+    padding: 40px 15px;
+  }
+
+  .search input{
+    width: 200px;
+  }
+
+
+  
+}
